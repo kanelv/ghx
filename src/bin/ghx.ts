@@ -1,3 +1,8 @@
 #!/usr/bin/env node
 
-console.log('ghx CLI initialized');
+import { runCli } from '../cli.js';
+
+runCli().catch((err) => {
+  console.error(`Fatal: ${err?.message || String(err)}`);
+  process.exit(1);
+});
