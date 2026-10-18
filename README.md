@@ -37,7 +37,8 @@ node dist/bin/ghx.js --help   # without linking
 ## Usage
 
 ```bash
-ghx account add work      # prompts for username + masked PAT; re-run to update
+ghx account add work      # prompts for username, masked PAT, git name + email; re-run to update
+ghx account update work   # edit username, git name + email (current values as defaults); PAT untouched
 ghx account list          # aliases and usernames only, never tokens
 ghx clone https://github.com/company-org/my-project.git [destination]
 ghx git remote add origin https://github.com/company-org/my-project.git   # paste from GitHub; run in an existing repo
@@ -56,6 +57,8 @@ Destination:      ./my-project
 
 Command preview (PAT masked):
   git clone https://company-user:********@github.com/company-org/my-project.git
+  git -C ./my-project config --local user.name "Work Me"
+  git -C ./my-project config --local user.email me@company.co.jp
 
 Do you want me to run this command now?
   Yes
@@ -63,9 +66,10 @@ Do you want me to run this command now?
 ```
 
 - The preview is display-only. The real PAT is never in a URL (except `git remote add`, below).
+- If the account has a git name/email, they are set as local `user.name`/`user.email` in the cloned repo, so work and personal commits never share an author. Without them, global git config applies.
 - No, Enter on the default, Escape, or Ctrl+C cancels without running Git.
 
-`ghx git remote add <name> <url>` uses the same account selection and confirmation, then runs `git remote add <name> https://user:PAT@github.com/owner/repo.git` in the current directory. Remote names starting with `-` are rejected; the PAT is masked in any git error output.
+`ghx git remote add <name> <url>` uses the same account selection and confirmation, then runs `git remote add <name> https://user:PAT@github.com/owner/repo.git` in the current directory. It also sets the account's local `user.name`/`user.email` in that repo (overwrites existing local values). Remote names starting with `-` are rejected; the PAT is masked in any git error output.
 
 ## Configuration
 
@@ -75,13 +79,16 @@ Do you want me to run this command now?
 [account.work]
 username = company-user
 credential_ref = ghx-work
+name = Work Me                ; optional, becomes local user.name
+email = me@company.co.jp      ; optional, becomes local user.email
 
 [owner-mapping]
 company-user = work
 company-org = work    ; add orgs by hand
 ```
 
-- `account add` maps the account's own username automatically.
+- `account add` and `account update` map the account's own username automatically (if unmapped).
+- `credential_ref` is derived from the alias and never prompted.
 - Owner lookup is case-insensitive. It only preselects; it never skips confirmation.
 
 ## Credential handling
