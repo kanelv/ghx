@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import { handleAccountAdd } from './commands/account-add.js';
+import { handleAccountUpdate } from './commands/account-update.js';
 import { handleAccountList } from './commands/account-list.js';
 import { handleClone } from './commands/clone.js';
 import { handleRemoteAdd } from './commands/remote-add.js';
@@ -10,6 +11,7 @@ export interface CliDependencies {
   configStore?: ConfigStore;
   credentialStore?: CredentialStore;
   handleAccountAdd?: typeof handleAccountAdd;
+  handleAccountUpdate?: typeof handleAccountUpdate;
   handleAccountList?: typeof handleAccountList;
   handleClone?: typeof handleClone;
   handleRemoteAdd?: typeof handleRemoteAdd;
@@ -24,6 +26,7 @@ export function createCli(deps?: CliDependencies): Command {
   const logger = deps?.logger ?? console;
 
   const addFn = deps?.handleAccountAdd ?? handleAccountAdd;
+  const updateFn = deps?.handleAccountUpdate ?? handleAccountUpdate;
   const listFn = deps?.handleAccountList ?? handleAccountList;
   const cloneFn = deps?.handleClone ?? handleClone;
   const remoteAddFn = deps?.handleRemoteAdd ?? handleRemoteAdd;
@@ -45,6 +48,21 @@ export function createCli(deps?: CliDependencies): Command {
         await addFn(alias, {
           configStore: deps?.configStore,
           credentialStore: deps?.credentialStore,
+          logger,
+        });
+      } catch (err: any) {
+        logger.error(`Error: ${err?.message || String(err)}`);
+        process.exitCode = 1;
+      }
+    });
+
+  accountCmd
+    .command('update <alias>')
+    .description('Update username, git author name and email of an account')
+    .action(async (alias: string) => {
+      try {
+        await updateFn(alias, {
+          configStore: deps?.configStore,
           logger,
         });
       } catch (err: any) {

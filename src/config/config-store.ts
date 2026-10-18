@@ -68,10 +68,16 @@ export class ConfigStore {
                     : `ghx-${alias}`;
 
               if (username) {
-                accounts[alias] = {
-                  username,
-                  credentialRef,
-                };
+                accounts[alias] = { username, credentialRef };
+                if (typeof accountData.name === 'string' && accountData.name) {
+                  accounts[alias].name = accountData.name;
+                }
+                if (
+                  typeof accountData.email === 'string' &&
+                  accountData.email
+                ) {
+                  accounts[alias].email = accountData.email;
+                }
               }
             }
           }
@@ -110,12 +116,19 @@ export class ConfigStore {
     if (Object.keys(config.accounts).length > 0) {
       const accountSection: Record<
         string,
-        { username: string; credential_ref: string }
+        {
+          username: string;
+          credential_ref: string;
+          name?: string;
+          email?: string;
+        }
       > = {};
       for (const [alias, acc] of Object.entries(config.accounts)) {
         accountSection[alias] = {
           username: acc.username,
           credential_ref: acc.credentialRef,
+          ...(acc.name && { name: acc.name }),
+          ...(acc.email && { email: acc.email }),
         };
       }
       iniObj.account = accountSection;

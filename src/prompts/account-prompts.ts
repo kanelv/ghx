@@ -8,12 +8,57 @@ export interface PromptAccountDetailsDependencies {
 
 export interface PromptAccountDetailsOptions {
   existingUsername?: string;
+  existingName?: string;
+  existingEmail?: string;
+}
+
+const validateUsername = (val: string) =>
+  !val || val.trim().length === 0 ? 'Username cannot be empty.' : true;
+
+async function promptGitIdentity(
+  inputFn: typeof input,
+  options?: PromptAccountDetailsOptions,
+): Promise<{ name?: string; email?: string }> {
+  const name = (
+    await inputFn({
+      message: 'Git author name (optional, set as local user.name):',
+      default: options?.existingName,
+    })
+  ).trim();
+  const email = (
+    await inputFn({
+      message: 'Git author email (optional, set as local user.email):',
+      default: options?.existingEmail,
+    })
+  ).trim();
+  return { ...(name && { name }), ...(email && { email }) };
+}
+
+export async function promptAccountProfile(
+  deps?: PromptAccountDetailsDependencies,
+  options?: PromptAccountDetailsOptions,
+): Promise<{ username: string; name?: string; email?: string }> {
+  const inputFn = deps?.input ?? input;
+  const username = await inputFn({
+    message: 'GitHub username:',
+    default: options?.existingUsername,
+    validate: validateUsername,
+  });
+  return {
+    username: username.trim(),
+    ...(await promptGitIdentity(inputFn, options)),
+  };
 }
 
 export async function promptAccountDetails(
   deps?: PromptAccountDetailsDependencies,
   options?: PromptAccountDetailsOptions,
-): Promise<{ username: string; pat: string }> {
+): Promise<{
+  username: string;
+  pat: string;
+  name?: string;
+  email?: string;
+}> {
   const inputFn = deps?.input ?? input;
   const passwordFn = deps?.password ?? password;
 
@@ -39,9 +84,12 @@ export async function promptAccountDetails(
     },
   });
 
+  const identity = await promptGitIdentity(inputFn, options);
+
   return {
     username: username.trim(),
     pat: pat.trim(),
+    ...identity,
   };
 }
 

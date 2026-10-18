@@ -3,6 +3,8 @@ import type { CredentialStore } from '../credentials/credential-store.js';
 import { OsCredentialStore } from '../credentials/os-credential-store.js';
 import { parseGitHubUrl } from '../git/url-parser.js';
 import { addRemote } from '../git/add-remote.js';
+import { identityConfigArgs, setLocalIdentity } from '../git/set-identity.js';
+import { quoteArg } from './clone.js';
 import { promptAccountSelection } from '../prompts/account-prompts.js';
 import { promptCloneConfirmation } from '../prompts/clone-prompts.js';
 
@@ -12,6 +14,7 @@ export interface HandleRemoteAddDependencies {
   promptAccountSelection?: typeof promptAccountSelection;
   promptCloneConfirmation?: typeof promptCloneConfirmation;
   addRemote?: typeof addRemote;
+  setLocalIdentity?: typeof setLocalIdentity;
   logger?: {
     log: (msg: string) => void;
     error: (msg: string) => void;
@@ -30,6 +33,7 @@ export async function handleRemoteAdd(
   const promptConfirmationFn =
     deps?.promptCloneConfirmation ?? promptCloneConfirmation;
   const addRemoteFn = deps?.addRemote ?? addRemote;
+  const setIdentityFn = deps?.setLocalIdentity ?? setLocalIdentity;
   const logger = deps?.logger ?? console;
 
   if (name.startsWith('-')) {
@@ -57,6 +61,9 @@ export async function handleRemoteAdd(
     repository: `${parsed.owner}/${parsed.repo}`,
     command: `git remote add ${name}`,
     maskedUrl: `https://${selectedAccount.username}:********@github.com/${parsed.owner}/${parsed.repo}.git`,
+    extraCommands: identityConfigArgs(selectedAccount).map(
+      (a) => `git ${a.map(quoteArg).join(' ')}`,
+    ),
   });
 
   if (!confirmed) {
@@ -80,6 +87,17 @@ export async function handleRemoteAdd(
   });
   if (!result.success) {
     throw new Error(result.error || 'git remote add failed.');
+  }
+
+  const identity = setIdentityFn({
+    name: selectedAccount.name,
+    email: selectedAccount.email,
+    cwd: process.cwd(),
+  });
+  if (!identity.success) {
+    throw new Error(
+      `Remote added, but setting local git identity failed: ${identity.error}`,
+    );
   }
 
   logger.log(`✓ Remote "${name}" set for ${parsed.owner}/${parsed.repo}`);
