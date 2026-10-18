@@ -31,6 +31,14 @@ describe('CLI argument parsing and command dispatch', () => {
     expect(mockAdd).toHaveBeenCalledWith('personal', expect.anything());
   });
 
+  it('dispatches account update command with alias', async () => {
+    const mockUpdate = vi.fn().mockResolvedValue(undefined);
+    const cli = createCli({ handleAccountUpdate: mockUpdate });
+
+    await cli.parseAsync(['node', 'ghx', 'account', 'update', 'work']);
+    expect(mockUpdate).toHaveBeenCalledWith('work', expect.anything());
+  });
+
   it('dispatches clone command with url and optional destination', async () => {
     const mockClone = vi.fn().mockResolvedValue(undefined);
     const cli = createCli({

@@ -41,6 +41,8 @@ export async function handleAccountAdd(
 
   const details = await promptDetailsFn(undefined, {
     existingUsername: existing?.username,
+    existingName: existing?.name,
+    existingEmail: existing?.email,
   });
 
   const credentialRef = existing?.credentialRef ?? `ghx-${alias}`;
@@ -50,6 +52,8 @@ export async function handleAccountAdd(
   configStore.setAccount(alias, {
     username: details.username,
     credentialRef,
+    ...(details.name && { name: details.name }),
+    ...(details.email && { email: details.email }),
   });
 
   // Automatically map the GitHub username to this account alias if not already mapped

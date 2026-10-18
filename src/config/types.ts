@@ -1,6 +1,8 @@
 export interface AccountConfig {
   username: string;
   credentialRef: string;
+  name?: string;
+  email?: string;
 }
 
 export interface GhxConfig {

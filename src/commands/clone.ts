@@ -6,6 +6,7 @@ import {
   cloneRepository,
   validateDestination,
 } from '../git/clone-repository.js';
+import { identityConfigArgs, setLocalIdentity } from '../git/set-identity.js';
 import { promptAccountSelection } from '../prompts/account-prompts.js';
 import { promptCloneConfirmation } from '../prompts/clone-prompts.js';
 
@@ -15,11 +16,15 @@ export interface HandleCloneDependencies {
   promptAccountSelection?: typeof promptAccountSelection;
   promptCloneConfirmation?: typeof promptCloneConfirmation;
   cloneRepository?: typeof cloneRepository;
+  setLocalIdentity?: typeof setLocalIdentity;
   logger?: {
     log: (msg: string) => void;
     error: (msg: string) => void;
   };
 }
+
+export const quoteArg = (a: string) =>
+  /^[\w.@/:=-]+$/.test(a) ? a : JSON.stringify(a);
 
 export async function handleClone(
   rawUrl: string,
@@ -33,6 +38,7 @@ export async function handleClone(
   const promptConfirmationFn =
     deps?.promptCloneConfirmation ?? promptCloneConfirmation;
   const cloneRepoFn = deps?.cloneRepository ?? cloneRepository;
+  const setIdentityFn = deps?.setLocalIdentity ?? setLocalIdentity;
   const logger = deps?.logger ?? console;
 
   // Step 1: Validate repository URL
@@ -77,6 +83,9 @@ export async function handleClone(
     repository: `${parsed.owner}/${parsed.repo}`,
     destination: formattedDest,
     maskedUrl,
+    extraCommands: identityConfigArgs(selectedAccount).map(
+      (a) => `git -C ${formattedDest} ${a.map(quoteArg).join(' ')}`,
+    ),
   });
 
   if (!confirmed) {
@@ -103,6 +112,17 @@ export async function handleClone(
 
   if (!result.success) {
     throw new Error(result.error || 'Git clone failed.');
+  }
+
+  const identity = setIdentityFn({
+    name: selectedAccount.name,
+    email: selectedAccount.email,
+    cwd: destination,
+  });
+  if (!identity.success) {
+    throw new Error(
+      `Repository cloned, but setting local git identity failed: ${identity.error}`,
+    );
   }
 
   logger.log('✓ Repository cloned successfully.');

@@ -4,6 +4,7 @@ export interface ClonePreviewDetails {
   destination?: string;
   maskedUrl: string;
   command?: string;
+  extraCommands?: string[];
 }
 
 export interface PromptCloneConfirmationDependencies {
@@ -25,7 +26,11 @@ export async function promptCloneConfirmation(
     logger.log(`Destination:      ${preview.destination}`);
   }
   logger.log(`\nCommand preview (PAT masked):`);
-  logger.log(`  ${preview.command ?? 'git clone'} ${preview.maskedUrl}\n`);
+  logger.log(`  ${preview.command ?? 'git clone'} ${preview.maskedUrl}`);
+  for (const cmd of preview.extraCommands ?? []) {
+    logger.log(`  ${cmd}`);
+  }
+  logger.log('');
 
   let selectFn = deps?.select;
   if (!selectFn) {

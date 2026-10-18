@@ -8,7 +8,11 @@ import {
 describe('Interactive Prompts', () => {
   describe('promptAccountDetails', () => {
     it('prompts for username and masked PAT', async () => {
-      const mockInput = vi.fn().mockResolvedValue('test-user');
+      const mockInput = vi
+        .fn()
+        .mockResolvedValueOnce('test-user')
+        .mockResolvedValueOnce('Test User')
+        .mockResolvedValueOnce('test@example.com');
       const mockPassword = vi.fn().mockResolvedValue('ghp_test_token_123');
 
       const result = await promptAccountDetails(
@@ -34,6 +38,8 @@ describe('Interactive Prompts', () => {
       expect(result).toEqual({
         username: 'test-user',
         pat: 'ghp_test_token_123',
+        name: 'Test User',
+        email: 'test@example.com',
       });
     });
 

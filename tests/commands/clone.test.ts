@@ -152,4 +152,43 @@ describe('ghx clone command', () => {
 
     expect(mockCloneRunner).not.toHaveBeenCalled();
   });
+
+  it('previews and applies the account git identity after clone', async () => {
+    configStore.setAccount('work', {
+      username: 'company-user',
+      credentialRef: 'ghx-work',
+      name: 'Work Me',
+      email: 'me@company.co.jp',
+    });
+    await credentialStore.setSecret('ghx-work', 'ghp_work_token');
+
+    const mockConfirm = vi.fn().mockResolvedValue(true);
+    const mockSetIdentity = vi.fn().mockReturnValue({ success: true });
+
+    await handleClone(
+      'https://github.com/company-org/my-project.git',
+      undefined,
+      {
+        configStore,
+        credentialStore,
+        promptAccountSelection: vi.fn().mockResolvedValue('work'),
+        promptCloneConfirmation: mockConfirm,
+        cloneRepository: vi
+          .fn()
+          .mockResolvedValue({ success: true, location: './my-project' }),
+        setLocalIdentity: mockSetIdentity,
+        logger: mockLogger,
+      },
+    );
+
+    expect(mockConfirm.mock.calls[0][0].extraCommands).toEqual([
+      'git -C ./my-project config --local user.name "Work Me"',
+      'git -C ./my-project config --local user.email me@company.co.jp',
+    ]);
+    expect(mockSetIdentity).toHaveBeenCalledWith({
+      name: 'Work Me',
+      email: 'me@company.co.jp',
+      cwd: 'my-project',
+    });
+  });
 });
