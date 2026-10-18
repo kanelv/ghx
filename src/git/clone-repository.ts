@@ -26,7 +26,10 @@ export function isGitInstalled(): boolean {
   }
 }
 
-export function validateDestination(destination: string): { valid: boolean; error?: string } {
+export function validateDestination(destination: string): {
+  valid: boolean;
+  error?: string;
+} {
   if (fs.existsSync(destination)) {
     const stat = fs.statSync(destination);
     if (!stat.isDirectory()) {
@@ -46,14 +49,24 @@ export function validateDestination(destination: string): { valid: boolean; erro
   return { valid: true };
 }
 
-export async function cloneRepository(options: CloneOptions): Promise<CloneResult> {
-  const { url, destination, username, token, spawnGit = spawn, skipGitCheck = false } = options;
+export async function cloneRepository(
+  options: CloneOptions,
+): Promise<CloneResult> {
+  const {
+    url,
+    destination,
+    username,
+    token,
+    spawnGit = spawn,
+    skipGitCheck = false,
+  } = options;
 
   if (!skipGitCheck && !isGitInstalled()) {
     return {
       success: false,
       location: destination,
-      error: 'Git is not installed or not found in PATH. Please install Git to use ghx.',
+      error:
+        'Git is not installed or not found in PATH. Please install Git to use ghx.',
     };
   }
 
@@ -103,6 +116,10 @@ export async function cloneRepository(options: CloneOptions): Promise<CloneResul
         stdio: ['ignore', 'pipe', 'pipe'],
       });
 
+      const killChild = () => child.kill();
+      process.once('exit', killChild);
+      child.on('close', () => process.off('exit', killChild));
+
       child.stdout?.on('data', () => {});
 
       child.stderr?.on('data', (chunk) => {
@@ -120,9 +137,16 @@ export async function cloneRepository(options: CloneOptions): Promise<CloneResul
           let translatedError = stderrOutput.trim();
 
           const lower = stderrOutput.toLowerCase();
-          if (lower.includes('authentication failed') || lower.includes('401') || lower.includes('403')) {
+          if (
+            lower.includes('authentication failed') ||
+            lower.includes('401') ||
+            lower.includes('403')
+          ) {
             translatedError = `GitHub authentication failed for account "${username}". Please verify your Personal Access Token has the necessary repository permissions.`;
-          } else if (lower.includes('repository not found') || lower.includes('could not read from remote repository')) {
+          } else if (
+            lower.includes('repository not found') ||
+            lower.includes('could not read from remote repository')
+          ) {
             translatedError = `Repository not found or insufficient permissions. Please verify the URL and account access rights.`;
           }
 

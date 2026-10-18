@@ -27,19 +27,28 @@ describe('ConfigStore', () => {
 
     it('rejects invalid aliases containing spaces or special characters', () => {
       const store = new ConfigStore(configPath);
-      expect(store.validateAlias('')).toEqual({ valid: false, error: 'Alias cannot be empty.' });
-      expect(store.validateAlias(' ')).toEqual({ valid: false, error: 'Alias cannot be empty.' });
+      expect(store.validateAlias('')).toEqual({
+        valid: false,
+        error: 'Alias cannot be empty.',
+      });
+      expect(store.validateAlias(' ')).toEqual({
+        valid: false,
+        error: 'Alias cannot be empty.',
+      });
       expect(store.validateAlias('work account')).toEqual({
         valid: false,
-        error: 'Alias must contain only alphanumeric characters, hyphens, and underscores.',
+        error:
+          'Alias must contain only alphanumeric characters, hyphens, and underscores.',
       });
       expect(store.validateAlias('work.personal')).toEqual({
         valid: false,
-        error: 'Alias must contain only alphanumeric characters, hyphens, and underscores.',
+        error:
+          'Alias must contain only alphanumeric characters, hyphens, and underscores.',
       });
       expect(store.validateAlias('[work]')).toEqual({
         valid: false,
-        error: 'Alias must contain only alphanumeric characters, hyphens, and underscores.',
+        error:
+          'Alias must contain only alphanumeric characters, hyphens, and underscores.',
       });
     });
   });

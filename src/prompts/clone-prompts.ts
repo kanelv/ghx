@@ -1,8 +1,9 @@
 export interface ClonePreviewDetails {
   alias: string;
   repository: string;
-  destination: string;
+  destination?: string;
   maskedUrl: string;
+  command?: string;
 }
 
 export interface PromptCloneConfirmationDependencies {
@@ -20,9 +21,11 @@ export async function promptCloneConfirmation(
 
   logger.log(`\nSelected account: ${preview.alias}`);
   logger.log(`Repository:       ${preview.repository}`);
-  logger.log(`Destination:      ${preview.destination}`);
+  if (preview.destination) {
+    logger.log(`Destination:      ${preview.destination}`);
+  }
   logger.log(`\nCommand preview (PAT masked):`);
-  logger.log(`  git clone ${preview.maskedUrl}\n`);
+  logger.log(`  ${preview.command ?? 'git clone'} ${preview.maskedUrl}\n`);
 
   let selectFn = deps?.select;
   if (!selectFn) {

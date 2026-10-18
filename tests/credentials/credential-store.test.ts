@@ -44,15 +44,14 @@ describe('CredentialStore', () => {
       const mockDeletePassword = vi.fn().mockReturnValue(true);
 
       class MockEntry {
-        constructor(public service: string, public user: string) {}
+        constructor(
+          public service: string,
+          public user: string,
+        ) {}
         setPassword = mockSetPassword;
         getPassword = mockGetPassword;
         deletePassword = mockDeletePassword;
       }
-      const mockEntryClass = vi.fn().mockImplementation((service: string, user: string) => {
-        return new MockEntry(service, user);
-      });
-
       const store = new OsCredentialStore('ghx-test', {
         EntryClass: MockEntry as any,
       });
@@ -87,7 +86,9 @@ describe('CredentialStore', () => {
     it('handles store unavailability with clear actionable resolution message', async () => {
       class MockUnavailableEntry {
         constructor() {
-          throw new Error('D-Bus daemon not running or secret service unreachable');
+          throw new Error(
+            'D-Bus daemon not running or secret service unreachable',
+          );
         }
       }
 

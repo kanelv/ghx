@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   promptAccountDetails,
   promptAccountSelection,
@@ -52,7 +52,9 @@ describe('Interactive Prompts', () => {
       expect(inputValidate('valid-user')).toBe(true);
 
       const passwordValidate = mockPassword.mock.calls[0][0].validate;
-      expect(passwordValidate('')).toBe('Personal Access Token cannot be empty.');
+      expect(passwordValidate('')).toBe(
+        'Personal Access Token cannot be empty.',
+      );
       expect(passwordValidate('ghp_token')).toBe(true);
     });
   });
@@ -62,15 +64,16 @@ describe('Interactive Prompts', () => {
       const mockSelect = vi.fn().mockResolvedValue('work');
 
       const accounts = {
-        personal: { username: 'my-personal-user', credentialRef: 'ghx-personal' },
+        personal: {
+          username: 'my-personal-user',
+          credentialRef: 'ghx-personal',
+        },
         work: { username: 'company-user', credentialRef: 'ghx-work' },
       };
 
-      const selected = await promptAccountSelection(
-        accounts,
-        'work',
-        { select: mockSelect },
-      );
+      const selected = await promptAccountSelection(accounts, 'work', {
+        select: mockSelect,
+      });
 
       expect(selected).toBe('work');
       expect(mockSelect).toHaveBeenCalledWith(
@@ -100,10 +103,13 @@ describe('Interactive Prompts', () => {
         alias: 'work',
         repository: 'company-org/my-project',
         destination: './my-project',
-        maskedUrl: 'https://company-user:********@github.com/company-org/my-project.git',
+        maskedUrl:
+          'https://company-user:********@github.com/company-org/my-project.git',
       };
 
-      const confirmed = await promptCloneConfirmation(preview, { select: mockSelect });
+      const confirmed = await promptCloneConfirmation(preview, {
+        select: mockSelect,
+      });
 
       expect(confirmed).toBe(false);
       expect(mockSelect).toHaveBeenCalledWith(
@@ -128,12 +134,16 @@ describe('Interactive Prompts', () => {
         maskedUrl: 'https://user:********@github.com/user/repo.git',
       };
 
-      const confirmed = await promptCloneConfirmation(preview, { select: mockSelect });
+      const confirmed = await promptCloneConfirmation(preview, {
+        select: mockSelect,
+      });
       expect(confirmed).toBe(true);
     });
 
     it('returns false if prompt is cancelled or rejected with ExitPromptError', async () => {
-      const mockSelect = vi.fn().mockRejectedValue(new Error('User force closed the prompt'));
+      const mockSelect = vi
+        .fn()
+        .mockRejectedValue(new Error('User force closed the prompt'));
 
       const preview = {
         alias: 'personal',
@@ -142,7 +152,9 @@ describe('Interactive Prompts', () => {
         maskedUrl: 'https://user:********@github.com/user/repo.git',
       };
 
-      const confirmed = await promptCloneConfirmation(preview, { select: mockSelect });
+      const confirmed = await promptCloneConfirmation(preview, {
+        select: mockSelect,
+      });
       expect(confirmed).toBe(false);
     });
   });

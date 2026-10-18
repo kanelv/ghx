@@ -54,7 +54,11 @@ describe('ghx account add command', () => {
     const rawConfig = fs.readFileSync(configStore.getConfigPath(), 'utf-8');
     expect(rawConfig).not.toContain('ghp_secret_token_123');
 
-    expect(logs.some((l) => l.includes('personal') && l.includes('configured successfully'))).toBe(true);
+    expect(
+      logs.some(
+        (l) => l.includes('personal') && l.includes('configured successfully'),
+      ),
+    ).toBe(true);
   });
 
   it('rejects invalid aliases with validation error', async () => {

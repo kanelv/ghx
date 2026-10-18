@@ -2,7 +2,10 @@ import { ConfigStore } from '../config/config-store.js';
 import type { CredentialStore } from '../credentials/credential-store.js';
 import { OsCredentialStore } from '../credentials/os-credential-store.js';
 import { parseGitHubUrl } from '../git/url-parser.js';
-import { cloneRepository, validateDestination } from '../git/clone-repository.js';
+import {
+  cloneRepository,
+  validateDestination,
+} from '../git/clone-repository.js';
 import { promptAccountSelection } from '../prompts/account-prompts.js';
 import { promptCloneConfirmation } from '../prompts/clone-prompts.js';
 
@@ -25,8 +28,10 @@ export async function handleClone(
 ): Promise<void> {
   const configStore = deps?.configStore ?? new ConfigStore();
   const credentialStore = deps?.credentialStore ?? new OsCredentialStore();
-  const promptSelectionFn = deps?.promptAccountSelection ?? promptAccountSelection;
-  const promptConfirmationFn = deps?.promptCloneConfirmation ?? promptCloneConfirmation;
+  const promptSelectionFn =
+    deps?.promptAccountSelection ?? promptAccountSelection;
+  const promptConfirmationFn =
+    deps?.promptCloneConfirmation ?? promptCloneConfirmation;
   const cloneRepoFn = deps?.cloneRepository ?? cloneRepository;
   const logger = deps?.logger ?? console;
 

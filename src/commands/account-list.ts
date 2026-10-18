@@ -8,7 +8,9 @@ export interface HandleAccountListDependencies {
   };
 }
 
-export async function handleAccountList(deps?: HandleAccountListDependencies): Promise<void> {
+export async function handleAccountList(
+  deps?: HandleAccountListDependencies,
+): Promise<void> {
   const configStore = deps?.configStore ?? new ConfigStore();
   const logger = deps?.logger ?? console;
 
@@ -16,7 +18,9 @@ export async function handleAccountList(deps?: HandleAccountListDependencies): P
   const aliases = Object.keys(accounts);
 
   if (aliases.length === 0) {
-    logger.log('No accounts configured. Run "ghx account add <alias>" to add an account.');
+    logger.log(
+      'No accounts configured. Run "ghx account add <alias>" to add an account.',
+    );
     return;
   }
 

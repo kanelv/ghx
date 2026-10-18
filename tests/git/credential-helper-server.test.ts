@@ -39,7 +39,10 @@ function runHelper(
 
 describe('Scoped Credential Helper Server', () => {
   it('creates helper script and serves credentials over Unix domain socket for github.com', async () => {
-    const session = await createScopedCredentialSession('company-user', 'ghp_secret_token_abc');
+    const session = await createScopedCredentialSession(
+      'company-user',
+      'ghp_secret_token_abc',
+    );
     try {
       expect(fs.existsSync(session.helperScriptPath)).toBe(true);
 
@@ -62,14 +65,25 @@ describe('Scoped Credential Helper Server', () => {
   });
 
   it('refuses to return credentials for non-GitHub hosts or non-HTTPS protocol', async () => {
-    const session = await createScopedCredentialSession('company-user', 'ghp_secret_token_abc');
+    const session = await createScopedCredentialSession(
+      'company-user',
+      'ghp_secret_token_abc',
+    );
     try {
       const gitlabQuery = 'protocol=https\nhost=gitlab.com\n\n';
-      const resultGitlab = await runHelper(session.helperScriptPath, ['get'], gitlabQuery);
+      const resultGitlab = await runHelper(
+        session.helperScriptPath,
+        ['get'],
+        gitlabQuery,
+      );
       expect(resultGitlab.stdout.trim()).toBe('');
 
       const httpQuery = 'protocol=http\nhost=github.com\n\n';
-      const resultHttp = await runHelper(session.helperScriptPath, ['get'], httpQuery);
+      const resultHttp = await runHelper(
+        session.helperScriptPath,
+        ['get'],
+        httpQuery,
+      );
       expect(resultHttp.stdout.trim()).toBe('');
     } finally {
       await session.cleanup();
@@ -77,7 +91,10 @@ describe('Scoped Credential Helper Server', () => {
   });
 
   it('no-ops on store and erase actions', async () => {
-    const session = await createScopedCredentialSession('company-user', 'ghp_secret_token_abc');
+    const session = await createScopedCredentialSession(
+      'company-user',
+      'ghp_secret_token_abc',
+    );
     try {
       const storeResult = await runHelper(
         session.helperScriptPath,

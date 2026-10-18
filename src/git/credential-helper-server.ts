@@ -28,9 +28,20 @@ export async function createScopedCredentialSession(
   const activeSockets = new Set<net.Socket>();
   let isCleanedUp = false;
 
+  const exitHandler = () => sigHandler();
+  const sigHandler = (signal?: NodeJS.Signals) => {
+    void cleanup();
+    // Handlers suppress default termination; exit (runs 'exit' listeners, e.g. kill git).
+    if (signal) process.exit(128 + os.constants.signals[signal]);
+  };
+
   const cleanup = async (): Promise<void> => {
     if (isCleanedUp) return;
     isCleanedUp = true;
+    process.off('exit', exitHandler);
+    process.off('SIGINT', sigHandler);
+    process.off('SIGTERM', sigHandler);
+    process.off('SIGHUP', sigHandler);
 
     for (const socket of activeSockets) {
       try {
@@ -59,11 +70,7 @@ export async function createScopedCredentialSession(
     }
   };
 
-  const sigHandler = async () => {
-    await cleanup();
-  };
-
-  process.once('exit', sigHandler);
+  process.once('exit', exitHandler);
   process.once('SIGINT', sigHandler);
   process.once('SIGTERM', sigHandler);
   process.once('SIGHUP', sigHandler);
@@ -191,7 +198,10 @@ function sendRequest() {
 }
 `;
 
-  fs.writeFileSync(helperScriptPath, helperScriptCode, { mode: 0o700, encoding: 'utf-8' });
+  fs.writeFileSync(helperScriptPath, helperScriptCode, {
+    mode: 0o700,
+    encoding: 'utf-8',
+  });
   try {
     fs.chmodSync(helperScriptPath, 0o700);
   } catch {

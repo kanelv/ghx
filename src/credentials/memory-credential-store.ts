@@ -1,4 +1,7 @@
-import type { CredentialStore, CredentialStoreAvailability } from './credential-store.js';
+import type {
+  CredentialStore,
+  CredentialStoreAvailability,
+} from './credential-store.js';
 
 export class MemoryCredentialStore implements CredentialStore {
   private readonly storage = new Map<string, string>();

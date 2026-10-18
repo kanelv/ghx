@@ -58,5 +58,7 @@ export async function handleAccountAdd(
     configStore.setOwnerMapping(details.username, alias);
   }
 
-  logger.log(`✓ Account "${alias}" (${details.username}) configured successfully.`);
+  logger.log(
+    `✓ Account "${alias}" (${details.username}) configured successfully.`,
+  );
 }

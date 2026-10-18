@@ -13,7 +13,10 @@ export function parseGitHubUrl(rawUrl: string): ParsedRepoUrl {
   const trimmed = rawUrl.trim();
 
   // Detect SSH format
-  if (trimmed.startsWith('git@') || (trimmed.includes(':') && !trimmed.includes('://'))) {
+  if (
+    trimmed.startsWith('git@') ||
+    (trimmed.includes(':') && !trimmed.includes('://'))
+  ) {
     throw new Error(
       `Only HTTPS GitHub repository URLs are supported (received SSH-style URL: "${trimmed}"). Please use "https://github.com/...".`,
     );
@@ -23,7 +26,9 @@ export function parseGitHubUrl(rawUrl: string): ParsedRepoUrl {
   try {
     parsed = new URL(trimmed);
   } catch {
-    throw new Error(`Invalid URL: Unable to parse "${trimmed}". Please provide a valid HTTPS GitHub repository URL.`);
+    throw new Error(
+      `Invalid URL: Unable to parse "${trimmed}". Please provide a valid HTTPS GitHub repository URL.`,
+    );
   }
 
   // Reject embedded credentials

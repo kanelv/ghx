@@ -3,7 +3,9 @@ import { parseGitHubUrl } from '../../src/git/url-parser.js';
 
 describe('parseGitHubUrl', () => {
   it('parses valid HTTPS GitHub URLs with .git', () => {
-    const result = parseGitHubUrl('https://github.com/company-org/my-project.git');
+    const result = parseGitHubUrl(
+      'https://github.com/company-org/my-project.git',
+    );
     expect(result).toEqual({
       owner: 'company-org',
       repo: 'my-project',
@@ -13,7 +15,9 @@ describe('parseGitHubUrl', () => {
   });
 
   it('parses valid HTTPS GitHub URLs without .git', () => {
-    const result = parseGitHubUrl('https://github.com/personal-account/sample-repo');
+    const result = parseGitHubUrl(
+      'https://github.com/personal-account/sample-repo',
+    );
     expect(result).toEqual({
       owner: 'personal-account',
       repo: 'sample-repo',
@@ -57,14 +61,18 @@ describe('parseGitHubUrl', () => {
     expect(() => parseGitHubUrl('https://gitlab.com/owner/repo.git')).toThrow(
       /Only github\.com repositories are supported/i,
     );
-    expect(() => parseGitHubUrl('https://bitbucket.org/owner/repo.git')).toThrow(
-      /Only github\.com repositories are supported/i,
-    );
+    expect(() =>
+      parseGitHubUrl('https://bitbucket.org/owner/repo.git'),
+    ).toThrow(/Only github\.com repositories are supported/i);
   });
 
   it('rejects malformed URLs', () => {
     expect(() => parseGitHubUrl('not-a-url')).toThrow(/Invalid URL/i);
-    expect(() => parseGitHubUrl('https://github.com/')).toThrow(/Invalid repository path/i);
-    expect(() => parseGitHubUrl('https://github.com/owner')).toThrow(/Invalid repository path/i);
+    expect(() => parseGitHubUrl('https://github.com/')).toThrow(
+      /Invalid repository path/i,
+    );
+    expect(() => parseGitHubUrl('https://github.com/owner')).toThrow(
+      /Invalid repository path/i,
+    );
   });
 });

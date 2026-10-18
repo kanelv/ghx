@@ -57,27 +57,29 @@ describe('ghx clone command', () => {
       location: './my-project',
     });
 
-    await handleClone('https://github.com/company-org/my-project.git', undefined, {
-      configStore,
-      credentialStore,
-      logger: mockLogger,
-      promptAccountSelection: mockSelect,
-      promptCloneConfirmation: mockConfirm,
-      cloneRepository: mockCloneRunner,
-    });
+    await handleClone(
+      'https://github.com/company-org/my-project.git',
+      undefined,
+      {
+        configStore,
+        credentialStore,
+        logger: mockLogger,
+        promptAccountSelection: mockSelect,
+        promptCloneConfirmation: mockConfirm,
+        cloneRepository: mockCloneRunner,
+      },
+    );
 
     // Account selection called with preselected 'work'
-    expect(mockSelect).toHaveBeenCalledWith(
-      expect.anything(),
-      'work',
-    );
+    expect(mockSelect).toHaveBeenCalledWith(expect.anything(), 'work');
 
     // Confirmation called with masked preview
     expect(mockConfirm).toHaveBeenCalledWith(
       expect.objectContaining({
         alias: 'work',
         repository: 'company-org/my-project',
-        maskedUrl: 'https://company-user:********@github.com/company-org/my-project.git',
+        maskedUrl:
+          'https://company-user:********@github.com/company-org/my-project.git',
       }),
     );
 
@@ -106,14 +108,18 @@ describe('ghx clone command', () => {
     const mockConfirm = vi.fn().mockResolvedValue(false); // User chose No
     const mockCloneRunner = vi.fn();
 
-    await handleClone('https://github.com/personal-org/sample.git', './custom-dest', {
-      configStore,
-      credentialStore,
-      logger: mockLogger,
-      promptAccountSelection: mockSelect,
-      promptCloneConfirmation: mockConfirm,
-      cloneRepository: mockCloneRunner,
-    });
+    await handleClone(
+      'https://github.com/personal-org/sample.git',
+      './custom-dest',
+      {
+        configStore,
+        credentialStore,
+        logger: mockLogger,
+        promptAccountSelection: mockSelect,
+        promptCloneConfirmation: mockConfirm,
+        cloneRepository: mockCloneRunner,
+      },
+    );
 
     expect(mockConfirm).toHaveBeenCalled();
     expect(mockCloneRunner).not.toHaveBeenCalled();
@@ -140,7 +146,9 @@ describe('ghx clone command', () => {
         promptCloneConfirmation: mockConfirm,
         cloneRepository: mockCloneRunner,
       }),
-    ).rejects.toThrow(/Personal Access Token for account "work" could not be found/i);
+    ).rejects.toThrow(
+      /Personal Access Token for account "work" could not be found/i,
+    );
 
     expect(mockCloneRunner).not.toHaveBeenCalled();
   });

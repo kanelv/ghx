@@ -13,7 +13,8 @@ export class ConfigStore {
     } else if (process.env.GHX_CONFIG_PATH) {
       this.configPath = process.env.GHX_CONFIG_PATH;
     } else {
-      const configHome = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
+      const configHome =
+        process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
       this.configPath = path.join(configHome, 'ghx', 'config');
     }
   }
@@ -30,7 +31,8 @@ export class ConfigStore {
     if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
       return {
         valid: false,
-        error: 'Alias must contain only alphanumeric characters, hyphens, and underscores.',
+        error:
+          'Alias must contain only alphanumeric characters, hyphens, and underscores.',
       };
     }
     return { valid: true };
@@ -54,7 +56,10 @@ export class ConfigStore {
           for (const [alias, data] of Object.entries(rawAccount)) {
             if (data && typeof data === 'object') {
               const accountData = data as Record<string, unknown>;
-              const username = typeof accountData.username === 'string' ? accountData.username : '';
+              const username =
+                typeof accountData.username === 'string'
+                  ? accountData.username
+                  : '';
               const credentialRef =
                 typeof accountData.credential_ref === 'string'
                   ? accountData.credential_ref
@@ -103,7 +108,10 @@ export class ConfigStore {
     const iniObj: Record<string, unknown> = {};
 
     if (Object.keys(config.accounts).length > 0) {
-      const accountSection: Record<string, { username: string; credential_ref: string }> = {};
+      const accountSection: Record<
+        string,
+        { username: string; credential_ref: string }
+      > = {};
       for (const [alias, acc] of Object.entries(config.accounts)) {
         accountSection[alias] = {
           username: acc.username,
@@ -118,7 +126,10 @@ export class ConfigStore {
     }
 
     const serialized = ini.stringify(iniObj);
-    fs.writeFileSync(this.configPath, serialized, { mode: 0o600, encoding: 'utf-8' });
+    fs.writeFileSync(this.configPath, serialized, {
+      mode: 0o600,
+      encoding: 'utf-8',
+    });
 
     try {
       fs.chmodSync(this.configPath, 0o600);

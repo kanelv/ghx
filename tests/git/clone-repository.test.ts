@@ -96,7 +96,11 @@ describe('cloneRepository', () => {
         on: (event: string, callback: any) => {
           if (event === 'close') {
             setTimeout(() => {
-              stderrCallback?.(Buffer.from('fatal: Authentication failed for "https://github.com/org/repo.git/"'));
+              stderrCallback?.(
+                Buffer.from(
+                  'fatal: Authentication failed for "https://github.com/org/repo.git/"',
+                ),
+              );
               callback(128);
             }, 10);
           }
@@ -115,7 +119,9 @@ describe('cloneRepository', () => {
     });
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('GitHub authentication failed for account "company-user"');
+    expect(result.error).toContain(
+      'GitHub authentication failed for account "company-user"',
+    );
     expect(result.error).not.toContain('ghp_invalid_token');
   });
 
@@ -134,7 +140,11 @@ describe('cloneRepository', () => {
         on: (event: string, callback: any) => {
           if (event === 'close') {
             setTimeout(() => {
-              stderrCallback?.(Buffer.from('ERROR: Repository not found. fatal: Could not read from remote repository.'));
+              stderrCallback?.(
+                Buffer.from(
+                  'ERROR: Repository not found. fatal: Could not read from remote repository.',
+                ),
+              );
               callback(128);
             }, 10);
           }
@@ -153,6 +163,8 @@ describe('cloneRepository', () => {
     });
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('Repository not found or insufficient permissions');
+    expect(result.error).toContain(
+      'Repository not found or insufficient permissions',
+    );
   });
 });

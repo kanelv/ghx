@@ -1,5 +1,8 @@
 import { Entry } from '@napi-rs/keyring';
-import type { CredentialStore, CredentialStoreAvailability } from './credential-store.js';
+import type {
+  CredentialStore,
+  CredentialStoreAvailability,
+} from './credential-store.js';
 import { CredentialStoreError } from './credential-store.js';
 
 export interface OsCredentialStoreOptions {
@@ -94,7 +97,10 @@ export class OsCredentialStore implements CredentialStore {
       if (err instanceof CredentialStoreError) {
         throw err;
       }
-      throw this.wrapError(err, `Failed to retrieve credential "${credentialRef}"`);
+      throw this.wrapError(
+        err,
+        `Failed to retrieve credential "${credentialRef}"`,
+      );
     }
   }
 
@@ -106,7 +112,10 @@ export class OsCredentialStore implements CredentialStore {
       if (err instanceof CredentialStoreError) {
         throw err;
       }
-      throw this.wrapError(err, `Failed to store credential "${credentialRef}"`);
+      throw this.wrapError(
+        err,
+        `Failed to store credential "${credentialRef}"`,
+      );
     }
   }
 
@@ -132,7 +141,10 @@ export class OsCredentialStore implements CredentialStore {
       if (err instanceof CredentialStoreError) {
         throw err;
       }
-      throw this.wrapError(err, `Failed to delete credential "${credentialRef}"`);
+      throw this.wrapError(
+        err,
+        `Failed to delete credential "${credentialRef}"`,
+      );
     }
   }
 }
