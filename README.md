@@ -142,6 +142,8 @@ git push --follow-tags               # 6. push the commit and tag
 npm view @cahgnexx/ghx version       # 7. confirm the new version is live
 ```
 
+First release: skip step 3 and publish the current version as is (`0.1.0` is not on npm yet). Step 3 is needed from the second release on, because npm rejects a version number it already has.
+
 First time only: `npm login` as `cahgnexx`. The `@cahgnexx` scope is your npm username, so no extra setup is needed.
 
 - `publishConfig.access = public` is set, otherwise scoped packages publish as private.
