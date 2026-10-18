@@ -10,6 +10,7 @@
 ![ESLint](https://img.shields.io/badge/Lint-ESLint-4B32C3?logo=eslint&logoColor=white)
 ![Prettier](https://img.shields.io/badge/Format-Prettier-F7B93E?logo=prettier&logoColor=black)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue)
+[![npm](https://img.shields.io/npm/v/@cahgnexx/ghx)](https://www.npmjs.com/package/@cahgnexx/ghx)
 
 Clone GitHub repos with the right account. Per-alias PATs live in the OS keychain, never in config, argv, URLs, or `.git/config`.
 
@@ -19,6 +20,12 @@ Clone GitHub repos with the right account. Per-alias PATs live in the OS keychai
 - macOS 12+ (Keychain) or Linux with a Secret Service daemon (GNOME Keyring, KWallet, KeePassXC) and D-Bus
 
 ## Install
+
+```bash
+npm i -g @cahgnexx/ghx
+```
+
+From source:
 
 ```bash
 npm install && npm run build
