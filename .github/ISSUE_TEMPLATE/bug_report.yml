@@ -1,0 +1,39 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Never paste PATs or tokens. Mask them as `********`.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Include the exact error text.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ghx account add work
+        2. ghx clone https://github.com/owner/repo.git
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+  - type: input
+    id: version
+    attributes:
+      label: ghx version
+      placeholder: ghx --version
+  - type: input
+    id: env
+    attributes:
+      label: OS, Node.js and Git versions
+      placeholder: macOS 14, Node 24.1, git 2.45
+    validations:
+      required: true
