@@ -23,7 +23,7 @@ Clone GitHub repos with the right account. Per-alias PATs live in the OS keychai
 ```bash
 npm install && npm run build
 npm link            # optional: puts `ghx` on PATH
-npm unlink -g ghx   # undo the link
+npm unlink -g @cahgnexx/ghx   # undo the link
 node dist/bin/ghx.js --help   # without linking
 ```
 
@@ -115,6 +115,38 @@ npm run format        # prettier
 npm run format:check
 npm run build
 ```
+
+## Publishing
+
+Published to npm as `@cahgnexx/ghx`. Users install with `npm i -g @cahgnexx/ghx`.
+
+A "version" is a fixed snapshot on npm. Once published, a version is immutable: you cannot edit or reuse it, so every change needs a new number.
+
+Versions follow semver `MAJOR.MINOR.PATCH`:
+
+| Bump | When | Example |
+|---|---|---|
+| `patch` | Bug fix, no behavior change | 0.1.0 -> 0.1.1 |
+| `minor` | New backward-compatible feature | 0.1.0 -> 0.2.0 |
+| `major` | Breaking change | 0.1.0 -> 1.0.0 |
+
+Release steps:
+
+```bash
+git switch main && git status        # 1. clean tree on main
+npm run lint && npm run typecheck && npm test && npm run format:check   # 2. all green
+npm version patch                    # 3. bumps package.json + lockfile, commits, tags v0.1.1
+npm pack --dry-run                   # 4. check the files that will ship (dist, README, LICENSE)
+npm publish                          # 5. prepublishOnly builds + tests, then uploads (asks 2FA code)
+git push --follow-tags               # 6. push the commit and tag
+npm view @cahgnexx/ghx version       # 7. confirm the new version is live
+```
+
+First time only: `npm login` as `cahgnexx`. The `@cahgnexx` scope is your npm username, so no extra setup is needed.
+
+- `publishConfig.access = public` is set, otherwise scoped packages publish as private.
+- Published a bad version? Within 72 hours `npm unpublish @cahgnexx/ghx@<version>`. After that, `npm deprecate @cahgnexx/ghx@<version> "reason"` and publish a fixed one.
+- Never put secrets in the repo; `files: ["dist"]` limits what ships.
 
 ## Contributing
 

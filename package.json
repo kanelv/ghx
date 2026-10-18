@@ -1,5 +1,5 @@
 {
-  "name": "ghx",
+  "name": "@cahgnexx/ghx",
   "version": "0.1.0",
   "description": "A secure GitHub account manager and clone CLI",
   "type": "module",
@@ -18,7 +18,8 @@
     "test:watch": "vitest",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "lint": "eslint src tests"
+    "lint": "eslint src tests",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
     "github",
@@ -47,6 +48,9 @@
     "typescript-eslint": "^8.71.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.5"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "engines": {
     "node": ">=24"
