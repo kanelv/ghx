@@ -28,7 +28,7 @@
     "clone",
     "security"
   ],
-  "author": "",
+  "author": "Kane Le <cuonglvrepvn@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "@inquirer/prompts": "^7.1.0",

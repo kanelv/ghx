@@ -1,5 +1,16 @@
 # ghx
 
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-24+-5FA04E?logo=nodedotjs&logoColor=white)
+![Git](https://img.shields.io/badge/Git-F05032?logo=git&logoColor=white)
+![Commander](https://img.shields.io/badge/CLI-Commander-000000)
+![Keychain](https://img.shields.io/badge/Credentials-OS%20Keychain-555555)
+![tsup](https://img.shields.io/badge/Build-tsup-FFD43B)
+![Vitest](https://img.shields.io/badge/Test-Vitest-6E9F18?logo=vitest&logoColor=white)
+![ESLint](https://img.shields.io/badge/Lint-ESLint-4B32C3?logo=eslint&logoColor=white)
+![Prettier](https://img.shields.io/badge/Format-Prettier-F7B93E?logo=prettier&logoColor=black)
+![License: MIT](https://img.shields.io/badge/License-MIT-blue)
+
 Clone GitHub repos with the right account. Per-alias PATs live in the OS keychain, never in config, argv, URLs, or `.git/config`.
 
 ## Requirements
@@ -44,8 +55,10 @@ Do you want me to run this command now?
 > No
 ```
 
-- The preview is display-only. The real PAT is never in a URL.
+- The preview is display-only. The real PAT is never in a URL (except `git remote add`, below).
 - No, Enter on the default, Escape, or Ctrl+C cancels without running Git.
+
+`ghx git remote add <name> <url>` uses the same account selection and confirmation, then runs `git remote add <name> https://user:PAT@github.com/owner/repo.git` in the current directory. Remote names starting with `-` are rejected; the PAT is masked in any git error output.
 
 ## Configuration
 
@@ -88,6 +101,7 @@ company-org = work    ; add orgs by hand
 | `GitHub authentication failed for account "<user>"` | PAT expired or lacks `repo` scope. Create a new one, then `ghx account add <alias>`. |
 | `Repository not found or insufficient permissions` | Check the URL and that the selected account has access. |
 | `Destination path ... already exists and is not empty` | Pass a different destination. |
+| `Unsupported git command` | Only `ghx git remote add <name> <url>` is supported. |
 | `No accounts configured` | Run `ghx account add <alias>`. |
 | `Personal Access Token ... could not be found` | Keychain entry was removed. Re-run `ghx account add <alias>`. |
 
@@ -98,9 +112,18 @@ npm test              # vitest
 npm run typecheck
 npm run lint          # eslint
 npm run format        # prettier
+npm run format:check
 npm run build
 ```
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Author
+
+Kane Le <cuonglvrepvn@gmail.com>
+
 ## License
 
-MIT
+MIT, see [LICENSE](LICENSE).

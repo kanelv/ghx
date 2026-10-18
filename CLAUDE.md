@@ -21,6 +21,8 @@ npm run format:check
 
 Flow for `ghx clone`: `src/cli.ts` -> `commands/clone.ts` -> validate URL/destination -> select account (preselected via owner mapping) -> masked preview + confirm (default No) -> fetch PAT from credential store -> `git/clone-repository.ts`.
 
+Flow for `ghx git remote add <name> <url>`: `src/cli.ts` (`git <args...>`, only `remote add` accepted) -> `commands/remote-add.ts` -> same URL parse/account select/confirm -> `git/add-remote.ts` (`spawnSync`, argument array; PAT masked in error output). Remote names starting with `-` are rejected.
+
 - **Dependency injection everywhere**: `createCli(deps)` and each `handle*` take optional deps (stores, prompt fns, `cloneRepository`, `logger`) defaulting to real implementations. Tests inject fakes; follow this pattern for new commands.
 - **Secrets never touch argv/config/.git/config** (sole exception: `ghx git remote add` embeds the PAT in the remote URL by user request): PATs live only in `CredentialStore` (`OsCredentialStore` via `@napi-rs/keyring`; `MemoryCredentialStore` for tests). `ConfigStore` (INI at `$XDG_CONFIG_HOME/ghx/config` or `~/.config/ghx/config`, mode 0600) holds only username, `credential_ref`, and `[owner-mapping]`.
 - **Clone auth**: `git/credential-helper-server.ts` creates a 0700 temp dir with a 0600 Unix socket and a generated helper script; git runs with `-c credential.helper= -c credential.helper=<helper>` and `GIT_TERMINAL_PROMPT=0`. The server only answers for `https` + `github.com`. Temp dir/socket must be cleaned up on exit and on SIGINT/SIGTERM/SIGHUP. Signal handlers clean up, then `process.exit(128+n)` (handlers suppress default termination); `clone-repository.ts` kills the git child on `exit`.
