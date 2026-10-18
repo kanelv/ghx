@@ -2,9 +2,9 @@ import { Command } from 'commander';
 import { handleAccountAdd } from './commands/account-add.js';
 import { handleAccountList } from './commands/account-list.js';
 import { handleClone } from './commands/clone.js';
+import { handleRemoteAdd } from './commands/remote-add.js';
 import { ConfigStore } from './config/config-store.js';
 import type { CredentialStore } from './credentials/credential-store.js';
-import { OsCredentialStore } from './credentials/os-credential-store.js';
 
 export interface CliDependencies {
   configStore?: ConfigStore;
@@ -12,6 +12,7 @@ export interface CliDependencies {
   handleAccountAdd?: typeof handleAccountAdd;
   handleAccountList?: typeof handleAccountList;
   handleClone?: typeof handleClone;
+  handleRemoteAdd?: typeof handleRemoteAdd;
   logger?: {
     log: (msg: string) => void;
     error: (msg: string) => void;
@@ -25,6 +26,7 @@ export function createCli(deps?: CliDependencies): Command {
   const addFn = deps?.handleAccountAdd ?? handleAccountAdd;
   const listFn = deps?.handleAccountList ?? handleAccountList;
   const cloneFn = deps?.handleClone ?? handleClone;
+  const remoteAddFn = deps?.handleRemoteAdd ?? handleRemoteAdd;
 
   program
     .name('ghx')
@@ -72,6 +74,36 @@ export function createCli(deps?: CliDependencies): Command {
     .action(async (url: string, destination?: string) => {
       try {
         await cloneFn(url, destination, {
+          configStore: deps?.configStore,
+          credentialStore: deps?.credentialStore,
+          logger,
+        });
+      } catch (err: any) {
+        logger.error(`Error: ${err?.message || String(err)}`);
+        process.exitCode = 1;
+      }
+    });
+
+  program
+    .command('git <args...>')
+    .description(
+      'Run a pasted git command with a selected account (supported: remote add <name> <url>)',
+    )
+    .action(async (args: string[]) => {
+      try {
+        const [sub, action, name, url, ...rest] = args;
+        if (
+          sub !== 'remote' ||
+          action !== 'add' ||
+          !name ||
+          !url ||
+          rest.length
+        ) {
+          throw new Error(
+            'Unsupported git command. Supported: ghx git remote add <name> <url>',
+          );
+        }
+        await remoteAddFn(name, url, {
           configStore: deps?.configStore,
           credentialStore: deps?.credentialStore,
           logger,
