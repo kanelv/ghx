@@ -163,4 +163,32 @@ describe('ConfigStore', () => {
       }
     });
   });
+
+  describe('ssh_host', () => {
+    it('round-trips ssh_host and keeps existing fields', () => {
+      const store = new ConfigStore(configPath);
+      store.setAccount('a', {
+        username: 'u',
+        credentialRef: 'ghx-a',
+        sshHost: 'gh.a',
+      });
+      expect(fs.readFileSync(configPath, 'utf-8')).toContain('ssh_host=gh.a');
+      expect(store.getAccount('a')).toEqual({
+        username: 'u',
+        credentialRef: 'ghx-a',
+        sshHost: 'gh.a',
+      });
+    });
+
+    it('loads legacy configs without ssh_host (HTTPS-only)', () => {
+      fs.writeFileSync(
+        configPath,
+        '[account.old]\nusername=u\ncredential_ref=ghx-old\n',
+      );
+      expect(new ConfigStore(configPath).getAccount('old')).toEqual({
+        username: 'u',
+        credentialRef: 'ghx-old',
+      });
+    });
+  });
 });

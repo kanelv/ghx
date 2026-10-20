@@ -43,13 +43,18 @@ export function createCli(deps?: CliDependencies): Command {
   accountCmd
     .command('add <alias>')
     .description('Add or update a GitHub account')
-    .action(async (alias: string) => {
+    .option('--ssh-only', 'SSH-only account: do not prompt for or store a PAT')
+    .action(async (alias: string, opts: { sshOnly?: boolean }) => {
       try {
-        await addFn(alias, {
-          configStore: deps?.configStore,
-          credentialStore: deps?.credentialStore,
-          logger,
-        });
+        await addFn(
+          alias,
+          {
+            configStore: deps?.configStore,
+            credentialStore: deps?.credentialStore,
+            logger,
+          },
+          { sshOnly: opts.sshOnly },
+        );
       } catch (err: any) {
         logger.error(`Error: ${err?.message || String(err)}`);
         process.exitCode = 1;
@@ -102,34 +107,47 @@ export function createCli(deps?: CliDependencies): Command {
       }
     });
 
+  const runRemoteAdd = async (name: string, url: string) => {
+    try {
+      await remoteAddFn(name, url, {
+        configStore: deps?.configStore,
+        credentialStore: deps?.credentialStore,
+        logger,
+      });
+    } catch (err: any) {
+      logger.error(`Error: ${err?.message || String(err)}`);
+      process.exitCode = 1;
+    }
+  };
+
+  program
+    .command('remote')
+    .description('Manage git remotes with a selected account')
+    .command('add <name> <url>')
+    .description('Add a remote (HTTPS or SSH) to the current repository')
+    .action(runRemoteAdd);
+
   program
     .command('git <args...>')
     .description(
       'Run a pasted git command with a selected account (supported: remote add <name> <url>)',
     )
     .action(async (args: string[]) => {
-      try {
-        const [sub, action, name, url, ...rest] = args;
-        if (
-          sub !== 'remote' ||
-          action !== 'add' ||
-          !name ||
-          !url ||
-          rest.length
-        ) {
-          throw new Error(
-            'Unsupported git command. Supported: ghx git remote add <name> <url>',
-          );
-        }
-        await remoteAddFn(name, url, {
-          configStore: deps?.configStore,
-          credentialStore: deps?.credentialStore,
-          logger,
-        });
-      } catch (err: any) {
-        logger.error(`Error: ${err?.message || String(err)}`);
+      const [sub, action, name, url, ...rest] = args;
+      if (
+        sub !== 'remote' ||
+        action !== 'add' ||
+        !name ||
+        !url ||
+        rest.length
+      ) {
+        logger.error(
+          'Error: Unsupported git command. Supported: ghx git remote add <name> <url>',
+        );
         process.exitCode = 1;
+        return;
       }
+      await runRemoteAdd(name, url);
     });
 
   return program;

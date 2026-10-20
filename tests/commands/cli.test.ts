@@ -28,7 +28,9 @@ describe('CLI argument parsing and command dispatch', () => {
     });
 
     await cli.parseAsync(['node', 'ghx', 'account', 'add', 'personal']);
-    expect(mockAdd).toHaveBeenCalledWith('personal', expect.anything());
+    expect(mockAdd).toHaveBeenCalledWith('personal', expect.anything(), {
+      sshOnly: undefined,
+    });
   });
 
   it('dispatches account update command with alias', async () => {
@@ -57,5 +59,42 @@ describe('CLI argument parsing and command dispatch', () => {
       './custom-dir',
       expect.anything(),
     );
+  });
+
+  it('dispatches remote add and the legacy git remote add', async () => {
+    const mockRemote = vi.fn().mockResolvedValue(undefined);
+    const cli = createCli({ handleRemoteAdd: mockRemote });
+    await cli.parseAsync([
+      'node',
+      'ghx',
+      'remote',
+      'add',
+      'origin',
+      'git@gh.a:o/r.git',
+    ]);
+    await cli.parseAsync([
+      'node',
+      'ghx',
+      'git',
+      'remote',
+      'add',
+      'origin',
+      'git@gh.a:o/r.git',
+    ]);
+    expect(mockRemote).toHaveBeenCalledTimes(2);
+    expect(mockRemote).toHaveBeenCalledWith(
+      'origin',
+      'git@gh.a:o/r.git',
+      expect.anything(),
+    );
+  });
+
+  it('passes --ssh-only to account add', async () => {
+    const mockAdd = vi.fn().mockResolvedValue(undefined);
+    const cli = createCli({ handleAccountAdd: mockAdd });
+    await cli.parseAsync(['node', 'ghx', 'account', 'add', 'x', '--ssh-only']);
+    expect(mockAdd).toHaveBeenCalledWith('x', expect.anything(), {
+      sshOnly: true,
+    });
   });
 });

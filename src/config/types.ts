@@ -3,6 +3,8 @@ export interface AccountConfig {
   credentialRef: string;
   name?: string;
   email?: string;
+  /** Host alias from ~/.ssh/config (not a key path). */
+  sshHost?: string;
 }
 
 export interface GhxConfig {

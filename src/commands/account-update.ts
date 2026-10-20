@@ -29,6 +29,7 @@ export async function handleAccountUpdate(
     existingUsername: existing.username,
     existingName: existing.name,
     existingEmail: existing.email,
+    existingSshHost: existing.sshHost,
   });
 
   // credentialRef is derived from the alias, so the stored PAT stays valid as-is.
@@ -37,6 +38,7 @@ export async function handleAccountUpdate(
     credentialRef: existing.credentialRef,
     ...(profile.name && { name: profile.name }),
     ...(profile.email && { email: profile.email }),
+    ...(profile.sshHost && { sshHost: profile.sshHost }),
   });
 
   if (!configStore.getAccountForOwner(profile.username)) {

@@ -78,6 +78,12 @@ export class ConfigStore {
                 ) {
                   accounts[alias].email = accountData.email;
                 }
+                if (
+                  typeof accountData.ssh_host === 'string' &&
+                  accountData.ssh_host.trim()
+                ) {
+                  accounts[alias].sshHost = accountData.ssh_host.trim();
+                }
               }
             }
           }
@@ -121,6 +127,7 @@ export class ConfigStore {
           credential_ref: string;
           name?: string;
           email?: string;
+          ssh_host?: string;
         }
       > = {};
       for (const [alias, acc] of Object.entries(config.accounts)) {
@@ -129,6 +136,7 @@ export class ConfigStore {
           credential_ref: acc.credentialRef,
           ...(acc.name && { name: acc.name }),
           ...(acc.email && { email: acc.email }),
+          ...(acc.sshHost && { ssh_host: acc.sshHost }),
         };
       }
       iniObj.account = accountSection;

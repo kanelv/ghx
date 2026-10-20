@@ -191,4 +191,97 @@ describe('ghx clone command', () => {
       cwd: 'my-project',
     });
   });
+
+  describe('SSH', () => {
+    const sshSetup = () => {
+      configStore.setAccount('a', {
+        username: 'user-a',
+        credentialRef: 'ghx-a',
+        sshHost: 'gh.a',
+      });
+      configStore.setAccount('b', {
+        username: 'user-b',
+        credentialRef: 'ghx-b',
+        sshHost: 'gh.b',
+      });
+      const getSecret = vi.spyOn(credentialStore, 'getSecret');
+      const clone = vi
+        .fn()
+        .mockResolvedValue({ success: true, location: './project' });
+      const confirm = vi.fn().mockResolvedValue(true);
+      const run = (url: string, alias = 'a', confirmFn = confirm) =>
+        handleClone(url, undefined, {
+          configStore,
+          credentialStore,
+          logger: mockLogger,
+          promptAccountSelection: vi.fn().mockResolvedValue(alias),
+          promptCloneConfirmation: confirmFn,
+          cloneRepository: clone,
+        });
+      return { getSecret, clone, confirm, run };
+    };
+
+    it('clones via the selected alias without credentials', async () => {
+      const { getSecret, clone, confirm, run } = sshSetup();
+      await run('git@gh.a:customer-a/project.git');
+      expect(confirm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          protocol: 'ssh',
+          maskedUrl: 'git@gh.a:customer-a/project.git',
+        }),
+      );
+      expect(clone).toHaveBeenCalledWith({
+        url: 'git@gh.a:customer-a/project.git',
+        destination: 'project',
+      });
+      expect(getSecret).not.toHaveBeenCalled();
+    });
+
+    it('swaps the default host for the selected profile alias, keeping owner/repo', async () => {
+      const { clone, run } = sshSetup();
+      await run('git@github.com:customer-a/project.git', 'b');
+      expect(clone.mock.calls[0][0].url).toBe(
+        'git@gh.b:customer-a/project.git',
+      );
+    });
+
+    it('keeps ssh:// form and uses the selected alias over the URL alias', async () => {
+      const { clone, run } = sshSetup();
+      await run('ssh://git@gh.a/customer-a/project.git', 'b');
+      expect(clone.mock.calls[0][0].url).toBe(
+        'ssh://git@gh.b/customer-a/project.git',
+      );
+    });
+
+    it('errors with guidance when the account has no ssh_host', async () => {
+      configStore.setAccount('https-only', {
+        username: 'u',
+        credentialRef: 'ghx-h',
+      });
+      const { clone, confirm, run } = sshSetup();
+      await expect(run('git@gh.a:o/r.git', 'https-only')).rejects.toThrow(
+        /ssh_host.*ghx account update https-only/s,
+      );
+      expect(confirm).not.toHaveBeenCalled();
+      expect(clone).not.toHaveBeenCalled();
+    });
+
+    it('does not clone when declined', async () => {
+      const { clone, getSecret, run } = sshSetup();
+      await run('git@gh.a:o/r.git', 'a', vi.fn().mockResolvedValue(false));
+      expect(clone).not.toHaveBeenCalled();
+      expect(getSecret).not.toHaveBeenCalled();
+    });
+
+    it('HTTPS URL is never converted to SSH', async () => {
+      const { clone, run } = sshSetup();
+      await credentialStore.setSecret('ghx-a', 'tok');
+      await run('https://github.com/o/r.git');
+      expect(clone.mock.calls[0][0]).toMatchObject({
+        url: 'https://github.com/o/r.git',
+        username: 'user-a',
+        token: 'tok',
+      });
+    });
+  });
 });

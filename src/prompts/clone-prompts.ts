@@ -3,6 +3,7 @@ export interface ClonePreviewDetails {
   repository: string;
   destination?: string;
   maskedUrl: string;
+  protocol?: 'https' | 'ssh';
   command?: string;
   extraCommands?: string[];
 }
@@ -25,7 +26,13 @@ export async function promptCloneConfirmation(
   if (preview.destination) {
     logger.log(`Destination:      ${preview.destination}`);
   }
-  logger.log(`\nCommand preview (PAT masked):`);
+  const ssh = preview.protocol === 'ssh';
+  if (preview.protocol) {
+    logger.log(`Protocol:         ${ssh ? 'SSH' : 'HTTPS'}`);
+  }
+  logger.log(
+    ssh ? `\nCommand preview (SSH):` : `\nCommand preview (PAT masked):`,
+  );
   logger.log(`  ${preview.command ?? 'git clone'} ${preview.maskedUrl}`);
   for (const cmd of preview.extraCommands ?? []) {
     logger.log(`  ${cmd}`);

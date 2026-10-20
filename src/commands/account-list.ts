@@ -30,7 +30,9 @@ export async function handleAccountList(
   for (const alias of aliases) {
     const acc = accounts[alias];
     const paddedAlias = alias.padEnd(maxAliasLen, ' ');
-    logger.log(`  ${paddedAlias}  (${acc.username})`);
+    logger.log(
+      `  ${paddedAlias}  (${acc.username})${acc.sshHost ? ` ssh: ${acc.sshHost}` : ''}`,
+    );
   }
   logger.log('');
 }
