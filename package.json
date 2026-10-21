@@ -1,6 +1,6 @@
 {
   "name": "@cahgnexx/ghx",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A secure GitHub account manager and clone CLI",
   "type": "module",
   "bin": {
