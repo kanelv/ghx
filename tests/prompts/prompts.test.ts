@@ -164,4 +164,45 @@ describe('Interactive Prompts', () => {
       expect(confirmed).toBe(false);
     });
   });
+
+  describe('ssh host and SSH preview', () => {
+    it('prompts for ssh host and skips the PAT with skipPat', async () => {
+      const mockInput = vi
+        .fn()
+        .mockResolvedValueOnce('u')
+        .mockResolvedValueOnce('')
+        .mockResolvedValueOnce('')
+        .mockResolvedValueOnce(' gh.a ');
+      const mockPassword = vi.fn();
+      const result = await promptAccountDetails(
+        { input: mockInput, password: mockPassword },
+        { skipPat: true },
+      );
+      expect(mockPassword).not.toHaveBeenCalled();
+      expect(result).toEqual({ username: 'u', sshHost: 'gh.a' });
+      const sshCall = mockInput.mock.calls[3][0];
+      expect(sshCall.validate('~/.ssh/id_rsa')).not.toBe(true);
+      expect(sshCall.validate('')).toBe(true);
+    });
+
+    it('shows an SSH preview without PAT wording', async () => {
+      const lines: string[] = [];
+      await promptCloneConfirmation(
+        {
+          alias: 'a',
+          repository: 'o/r',
+          maskedUrl: 'git@gh.a:o/r.git',
+          protocol: 'ssh',
+        },
+        {
+          select: vi.fn().mockResolvedValue(false),
+          logger: { log: (m: string) => lines.push(m) },
+        },
+      );
+      const out = lines.join('\n');
+      expect(out).toContain('Command preview (SSH):');
+      expect(out).toContain('git clone git@gh.a:o/r.git');
+      expect(out).not.toContain('PAT');
+    });
+  });
 });

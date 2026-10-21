@@ -2,7 +2,8 @@ import { ConfigStore } from '../config/config-store.js';
 import type { CredentialStore } from '../credentials/credential-store.js';
 import { OsCredentialStore } from '../credentials/os-credential-store.js';
 import { parseGitHubUrl } from '../git/url-parser.js';
-import { addRemote } from '../git/add-remote.js';
+import { resolveTarget } from '../git/resolve-target.js';
+import { addRemote, checkRemoteTarget } from '../git/add-remote.js';
 import { identityConfigArgs, setLocalIdentity } from '../git/set-identity.js';
 import { quoteArg } from './clone.js';
 import { promptAccountSelection } from '../prompts/account-prompts.js';
@@ -14,6 +15,7 @@ export interface HandleRemoteAddDependencies {
   promptAccountSelection?: typeof promptAccountSelection;
   promptCloneConfirmation?: typeof promptCloneConfirmation;
   addRemote?: typeof addRemote;
+  checkRemoteTarget?: typeof checkRemoteTarget;
   setLocalIdentity?: typeof setLocalIdentity;
   logger?: {
     log: (msg: string) => void;
@@ -33,6 +35,7 @@ export async function handleRemoteAdd(
   const promptConfirmationFn =
     deps?.promptCloneConfirmation ?? promptCloneConfirmation;
   const addRemoteFn = deps?.addRemote ?? addRemote;
+  const checkTargetFn = deps?.checkRemoteTarget ?? checkRemoteTarget;
   const setIdentityFn = deps?.setLocalIdentity ?? setLocalIdentity;
   const logger = deps?.logger ?? console;
 
@@ -41,6 +44,11 @@ export async function handleRemoteAdd(
   }
 
   const parsed = parseGitHubUrl(rawUrl);
+
+  const targetError = checkTargetFn(name);
+  if (targetError) {
+    throw new Error(targetError);
+  }
 
   const accounts = configStore.listAccounts();
   if (Object.keys(accounts).length === 0) {
@@ -56,11 +64,14 @@ export async function handleRemoteAdd(
     throw new Error(`Account "${selectedAlias}" not found in configuration.`);
   }
 
+  const target = resolveTarget(parsed, selectedAlias, selectedAccount);
+
   const confirmed = await promptConfirmationFn({
     alias: selectedAlias,
     repository: `${parsed.owner}/${parsed.repo}`,
     command: `git remote add ${name}`,
-    maskedUrl: `https://${selectedAccount.username}:********@github.com/${parsed.owner}/${parsed.repo}.git`,
+    maskedUrl: target.displayUrl,
+    protocol: target.protocol,
     extraCommands: identityConfigArgs(selectedAccount).map(
       (a) => `git ${a.map(quoteArg).join(' ')}`,
     ),
@@ -71,20 +82,24 @@ export async function handleRemoteAdd(
     return;
   }
 
-  const pat = await credentialStore.getSecret(selectedAccount.credentialRef);
-  if (!pat) {
-    throw new Error(
-      `Personal Access Token for account "${selectedAlias}" could not be found in the credential store. Please re-add it using: ghx account add ${selectedAlias}`,
-    );
+  let result;
+  if (target.protocol === 'ssh') {
+    result = addRemoteFn({ name, url: target.sshUrl! });
+  } else {
+    const pat = await credentialStore.getSecret(selectedAccount.credentialRef);
+    if (!pat) {
+      throw new Error(
+        `Personal Access Token for account "${selectedAlias}" could not be found in the credential store. Please re-add it using: ghx account add ${selectedAlias}`,
+      );
+    }
+    const user = encodeURIComponent(selectedAccount.username);
+    const token = encodeURIComponent(pat);
+    result = addRemoteFn({
+      name,
+      url: `https://${user}:${token}@github.com/${parsed.owner}/${parsed.repo}.git`,
+      token: pat,
+    });
   }
-
-  const user = encodeURIComponent(selectedAccount.username);
-  const token = encodeURIComponent(pat);
-  const result = addRemoteFn({
-    name,
-    url: `https://${user}:${token}@github.com/${parsed.owner}/${parsed.repo}.git`,
-    token: pat,
-  });
   if (!result.success) {
     throw new Error(result.error || 'git remote add failed.');
   }

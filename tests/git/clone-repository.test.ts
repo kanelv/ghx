@@ -167,4 +167,40 @@ describe('cloneRepository', () => {
       'Repository not found or insufficient permissions',
     );
   });
+
+  it('SSH: runs plain git clone with no credential helper and keeps ssh errors', async () => {
+    const calls: any[] = [];
+    const mockSpawn = vi.fn().mockImplementation((command, args, options) => {
+      calls.push({ command, args, options });
+      let errCb: any;
+      return {
+        stdout: { on: vi.fn() },
+        stderr: {
+          on: (e: string, cb: any) => {
+            if (e === 'data') errCb = cb;
+          },
+        },
+        on: (event: string, callback: any) => {
+          if (event === 'close') {
+            setTimeout(() => {
+              errCb?.(Buffer.from('git@gh.a: Permission denied (publickey).'));
+              callback(128);
+            }, 5);
+          }
+        },
+      };
+    });
+
+    const dest = path.join(tmpDir, 'ssh-project');
+    const result = await cloneRepository({
+      url: 'git@gh.a:org/repo.git',
+      destination: dest,
+      spawnGit: mockSpawn as any,
+      skipGitCheck: true,
+    });
+
+    expect(calls[0].args).toEqual(['clone', 'git@gh.a:org/repo.git', dest]);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Permission denied (publickey)');
+  });
 });

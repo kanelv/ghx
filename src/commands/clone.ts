@@ -6,6 +6,7 @@ import {
   cloneRepository,
   validateDestination,
 } from '../git/clone-repository.js';
+import { resolveTarget } from '../git/resolve-target.js';
 import { identityConfigArgs, setLocalIdentity } from '../git/set-identity.js';
 import { promptAccountSelection } from '../prompts/account-prompts.js';
 import { promptCloneConfirmation } from '../prompts/clone-prompts.js';
@@ -76,13 +77,15 @@ export async function handleClone(
       ? destination
       : `./${destination}`;
 
-  const maskedUrl = `https://${selectedAccount.username}:********@github.com/${parsed.owner}/${parsed.repo}.git`;
+  // Throws before any prompt/secret access if an SSH URL has no usable ssh_host.
+  const target = resolveTarget(parsed, selectedAlias, selectedAccount);
 
   const confirmed = await promptConfirmationFn({
     alias: selectedAlias,
     repository: `${parsed.owner}/${parsed.repo}`,
     destination: formattedDest,
-    maskedUrl,
+    maskedUrl: target.displayUrl,
+    protocol: target.protocol,
     extraCommands: identityConfigArgs(selectedAccount).map(
       (a) => `git -C ${formattedDest} ${a.map(quoteArg).join(' ')}`,
     ),
@@ -93,21 +96,24 @@ export async function handleClone(
     return;
   }
 
-  // Step 4: Retrieve PAT securely from OS credential store
-  const pat = await credentialStore.getSecret(selectedAccount.credentialRef);
-  if (!pat) {
-    throw new Error(
-      `Personal Access Token for account "${selectedAlias}" could not be found in the credential store. Please re-add it using: ghx account add ${selectedAlias}`,
-    );
+  // Step 4: HTTPS fetches the PAT from the credential store; SSH never does.
+  let auth: { username: string; token: string } | undefined;
+  if (target.protocol === 'https') {
+    const pat = await credentialStore.getSecret(selectedAccount.credentialRef);
+    if (!pat) {
+      throw new Error(
+        `Personal Access Token for account "${selectedAlias}" could not be found in the credential store. Please re-add it using: ghx account add ${selectedAlias}`,
+      );
+    }
+    auth = { username: selectedAccount.username, token: pat };
   }
 
   // Step 5: Execute clone securely
   logger.log('Cloning repository...');
   const result = await cloneRepoFn({
-    url: parsed.cloneUrl,
+    url: target.sshUrl ?? parsed.cloneUrl,
     destination,
-    username: selectedAccount.username,
-    token: pat,
+    ...auth,
   });
 
   if (!result.success) {

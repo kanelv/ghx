@@ -5,8 +5,9 @@ import { createScopedCredentialSession } from './credential-helper-server.js';
 export interface CloneOptions {
   url: string;
   destination: string;
-  username: string;
-  token: string;
+  /** username + token: HTTPS via credential helper. Omit both for SSH. */
+  username?: string;
+  token?: string;
   spawnGit?: typeof spawn;
   skipGitCheck?: boolean;
 }
@@ -79,9 +80,12 @@ export async function cloneRepository(
     };
   }
 
-  let session;
+  let session:
+    Awaited<ReturnType<typeof createScopedCredentialSession>> | undefined;
   try {
-    session = await createScopedCredentialSession(username, token);
+    if (username && token) {
+      session = await createScopedCredentialSession(username, token);
+    }
   } catch (err: any) {
     return {
       success: false,
@@ -92,10 +96,14 @@ export async function cloneRepository(
 
   try {
     const gitArgs = [
-      '-c',
-      'credential.helper=',
-      '-c',
-      `credential.helper=${session.helperScriptPath}`,
+      ...(session
+        ? [
+            '-c',
+            'credential.helper=',
+            '-c',
+            `credential.helper=${session.helperScriptPath}`,
+          ]
+        : []),
       'clone',
       url,
       destination,
@@ -137,7 +145,9 @@ export async function cloneRepository(
           let translatedError = stderrOutput.trim();
 
           const lower = stderrOutput.toLowerCase();
-          if (
+          if (!session) {
+            // SSH: keep git/ssh's own message (e.g. "Permission denied (publickey)").
+          } else if (
             lower.includes('authentication failed') ||
             lower.includes('401') ||
             lower.includes('403')

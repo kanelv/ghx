@@ -1,5 +1,6 @@
 import { input, password } from '@inquirer/prompts';
 import type { AccountConfig } from '../config/types.js';
+import { isValidSshHost } from '../git/url-parser.js';
 
 export interface PromptAccountDetailsDependencies {
   input?: typeof input;
@@ -10,6 +11,9 @@ export interface PromptAccountDetailsOptions {
   existingUsername?: string;
   existingName?: string;
   existingEmail?: string;
+  existingSshHost?: string;
+  /** Skip the PAT prompt (SSH-only account). */
+  skipPat?: boolean;
 }
 
 const validateUsername = (val: string) =>
@@ -18,7 +22,7 @@ const validateUsername = (val: string) =>
 async function promptGitIdentity(
   inputFn: typeof input,
   options?: PromptAccountDetailsOptions,
-): Promise<{ name?: string; email?: string }> {
+): Promise<{ name?: string; email?: string; sshHost?: string }> {
   const name = (
     await inputFn({
       message: 'Git author name (optional, set as local user.name):',
@@ -31,13 +35,32 @@ async function promptGitIdentity(
       default: options?.existingEmail,
     })
   ).trim();
-  return { ...(name && { name }), ...(email && { email }) };
+  const sshHost = (
+    (await inputFn({
+      message: 'SSH host alias from ~/.ssh/config (optional, for SSH URLs):',
+      default: options?.existingSshHost,
+      validate: (val: string) =>
+        !val.trim() || isValidSshHost(val.trim())
+          ? true
+          : 'Use a Host alias from ~/.ssh/config (letters, digits, ".", "_", "-"), not a key path.',
+    })) ?? ''
+  ).trim();
+  return {
+    ...(name && { name }),
+    ...(email && { email }),
+    ...(sshHost && { sshHost }),
+  };
 }
 
 export async function promptAccountProfile(
   deps?: PromptAccountDetailsDependencies,
   options?: PromptAccountDetailsOptions,
-): Promise<{ username: string; name?: string; email?: string }> {
+): Promise<{
+  username: string;
+  name?: string;
+  email?: string;
+  sshHost?: string;
+}> {
   const inputFn = deps?.input ?? input;
   const username = await inputFn({
     message: 'GitHub username:',
@@ -55,9 +78,10 @@ export async function promptAccountDetails(
   options?: PromptAccountDetailsOptions,
 ): Promise<{
   username: string;
-  pat: string;
+  pat?: string;
   name?: string;
   email?: string;
+  sshHost?: string;
 }> {
   const inputFn = deps?.input ?? input;
   const passwordFn = deps?.password ?? password;
@@ -73,22 +97,24 @@ export async function promptAccountDetails(
     },
   });
 
-  const pat = await passwordFn({
-    message: 'GitHub Personal Access Token (PAT):',
-    mask: '*',
-    validate: (val: string) => {
-      if (!val || val.trim().length === 0) {
-        return 'Personal Access Token cannot be empty.';
-      }
-      return true;
-    },
-  });
+  const pat = options?.skipPat
+    ? undefined
+    : await passwordFn({
+        message: 'GitHub Personal Access Token (PAT):',
+        mask: '*',
+        validate: (val: string) => {
+          if (!val || val.trim().length === 0) {
+            return 'Personal Access Token cannot be empty.';
+          }
+          return true;
+        },
+      });
 
   const identity = await promptGitIdentity(inputFn, options);
 
   return {
     username: username.trim(),
-    pat: pat.trim(),
+    ...(pat !== undefined && { pat: pat.trim() }),
     ...identity,
   };
 }

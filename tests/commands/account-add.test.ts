@@ -95,4 +95,35 @@ describe('ghx account add command', () => {
       }),
     ).rejects.toThrow(/Secret service daemon not running/i);
   });
+
+  it('--ssh-only stores ssh_host and never touches the credential store', async () => {
+    const setSecret = vi.spyOn(credentialStore, 'setSecret');
+    const isAvailable = vi.spyOn(credentialStore, 'isAvailable');
+    const prompts = vi
+      .fn()
+      .mockResolvedValue({ username: 'u', sshHost: 'gh.a' });
+
+    await handleAccountAdd(
+      'a',
+      {
+        configStore,
+        credentialStore,
+        promptAccountDetails: prompts,
+        logger: mockLogger,
+      },
+      { sshOnly: true },
+    );
+
+    expect(prompts).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({ skipPat: true }),
+    );
+    expect(setSecret).not.toHaveBeenCalled();
+    expect(isAvailable).not.toHaveBeenCalled();
+    expect(configStore.getAccount('a')).toEqual({
+      username: 'u',
+      credentialRef: 'ghx-a',
+      sshHost: 'gh.a',
+    });
+  });
 });
