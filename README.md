@@ -218,7 +218,8 @@ npm version patch                    # 3. bumps package.json + lockfile, commits
 npm pack --dry-run                   # 4. check the files that will ship (dist, README, LICENSE)
 npm publish                          # 5. prepublishOnly builds + tests, then uploads (asks 2FA code)
 git push --follow-tags               # 6. push the commit and tag
-npm view @cahgnexx/ghx version       # 7. confirm the new version is live
+gh release create v0.1.1 --generate-notes   # 7. GitHub release for the tag (use the version from step 3)
+npm view @cahgnexx/ghx version       # 8. confirm the new version is live
 ```
 
 First release: skip step 3 and publish the current version as is (`0.1.0` is not on npm yet). Step 3 is needed from the second release on, because npm rejects a version number it already has.
